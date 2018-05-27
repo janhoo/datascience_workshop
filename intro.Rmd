@@ -1,0 +1,118 @@
+---
+title: "Intro"
+author: "Carl Boettiger"
+date: "1/29/2015"
+output:
+  ioslides_presentation:
+#    self_contained: false
+---
+
+
+## The rOpenSci project
+
+building tools, building community
+
+#<img src="images/dimacs/ropensci-community.jpg"  width="600">
+
+## R Programming
+
+
+Take [DataCamp’s](https://www.datacamp.com/) free [R Tutorial](https://www.datacamp.com/courses/free-introduction-to-r) to learn how to write basic R code or visit [Try R](http://tryr.codeschool.com/) by [Code School](https://www.codeschool.com/). Both sites provide interactive lessons that will get you writing real code in minutes. They are a great place to make mistakes and test out new skills. You are told immediately when you go wrong and given a chance to fix your code
+
+
+#<iframe src="http://status.ropensci.org" height="600" width="100%" frameborder="0"></iframe>
+
+## Contributors
+
+#<iframe src="http://ropensci.org/community" height="600" width="100%" frameborder="0"></iframe>
+
+## Community
+
+- ROpenSci Blog: [ropensci.org/blog](http://ropensci.org/blog/)
+- Community Calls: [github.com/ropensci/commcalls](https://github.com/ropensci/commcalls)
+- UnConference: [unconf.ropensci.org](http://unconf.ropensci.org/)
+- ROpenSci Github: [github.com/ropensci](https://github.com/ropensci)
+- ROpenSci Twitter: @ [rOpenSci](https://twitter.com/ropensci)
+
+## Goals
+
+- Increase the availability and quality of R packages to interface with research data
+- Support reproducibility along the whole data analysis pipeline
+- Sustainable software design
+- Sustainable community 
+
+
+
+
+```{r include=FALSE}
+library(ggplot2)
+library(knitr)
+knitr::opts_chunk$set(
+  comment = "# ",
+  error = FALSE,
+  cache = TRUE,
+  message = FALSE,
+  warning = FALSE)
+```
+
+
+## Growth of climate data by type
+
+<img src="images/dimacs/growth-climate-data.png" width="450">
+
+  Overpeck+ (2011) doi: [ 10.1126/science.1197869](http://doi.org/10.1126/science.1197869)  
+
+
+
+# The real challenge is doing science today that is relevant to the data tomorrow
+
+
+
+## Example: Synthetic analysis of biodiversity loss
+
+<img src="images/dimacs/diversity-fig1.png" width="800">
+
+Synthesizes over 140 data sets.
+
+
+## Finds no evidence for systematic loss
+
+<img src="images/dimacs/diversity-fig2.png" width="800">
+
+How easy would it be to update this to reflect new data?
+
+# What is "a lot" of data?
+
+
+## Engineering bottlenecks
+
+<img src="images/dimacs/bottleneck.jpg" width="600">
+
+  Baraniuk (2011) doi: [ 10.1126/science.1197448](http://doi.org/10.1126/science.1197448)  
+
+## From bottlenecks to workflows
+
+<img src="images/dimacs/science-bottleneck.png" width="600">
+
+ adapted from Reichman+ (2011) doi: [ 10.1126/science.1197962](http://doi.org/10.1126/science.1197962) 
+
+## From bottlenecks to workflows
+
+<img src="images/berkeley2014/data-workflow.png" width="600">
+
+Reichman+ (2011) doi: [ 10.1126/science.1197962](http://doi.org/10.1126/science.1197962) 
+
+
+## Example workflows: Dynamic documents
+
+<img src="images/dimacs/spectrum.png" width="600">
+
+Peng (2011) doi: [10.1126/science.1213847](http://doi.org/10.1126/science.1213847)
+
+
+
+
+
+
+
+

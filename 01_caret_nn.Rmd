@@ -1,0 +1,112 @@
+---
+title: "00 Neural networks with caret"
+author: "Jan Holstein"
+date: '`r Sys.Date()`'
+output:
+  prettydoc::html_pretty:
+    self_contained: yes
+    highlight: github
+    theme: cayman
+    css: style.css
+  pdf_document:
+    keep_tex: yes
+---
+
+
+
+```{r}
+rm(list=ls())
+library(ISLR)
+print(head(College))
+```
+
+
+
+# do manual scaling
+```{r}
+
+maxs <- apply(College[, 2:18], 2, max)
+mins <- apply(College[, 2:18], 2, min)
+
+
+scaled.data <- as.data.frame(scale(College[,2:18],
+                                   center = mins,
+                                   scale = maxs - mins))
+```
+
+
+
+# gather into kae value pairs
+```{r}
+library(tidyverse)
+gather(scaled.data,key,value)
+
+
+```
+
+#prepate data (splitting)
+```{r}
+Private = as.numeric(College$Private)-1 # turn factor into 0/1
+data = cbind(Private,scaled.data) # use scaled data
+data = cbind(Private,College[,2:18]) # scale later in caret::train
+
+library(caret) 
+set.seed(42)
+# Create split
+idx <- createDataPartition(data$Private, p = .75, list = FALSE) 
+train <- data[idx, ]
+test <- data[-idx, ]
+```
+
+
+# nnet is the package for nnet
+```{r}
+
+fitControl <- trainControl(method = "repeatedcv", 
+                           number = 5,
+                           repeats = 3)
+nn <- train(factor(Private) ~ ., 
+            data = train, 
+            method = "nnet", 
+            trControl = fitControl, 
+            .size =3,
+            verbose= FALSE,
+            preProcess = c("scale", "center")            )
+plot(nn)
+varImp(nn)
+
+
+
+```
+
+# confusion matrix
+```{r}
+# Compute predictions on test set
+predicted.nn.values <- predict(nn, test[2:18])
+# print results
+print(head(predicted.nn.values, 3))
+
+table(test$Private,predicted.nn.values)
+
+confusionMatrix(test$Private,predicted.nn.values)
+```
+
+# lime
+```{r}
+library(lime)
+explainer <- lime(train,nn)
+lime_expl <- explain(test[1:2,],explainer, n_labels =1 , n_features = 14)
+plot_features(lime_expl,ncol=2)
+```
+
+
+
+
+
+
+
+
+
+
+
+

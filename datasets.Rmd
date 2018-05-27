@@ -1,0 +1,377 @@
+---
+title: "Intro2R"
+author: "Jan Holstein"
+date: "18 April 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, rows.print=10)
+```
+
+
+## IRIS / CARS 
+
+## clustering
+
+
+```{r}
+library(datasets)
+library(tidyverse)
+head(iris)
+library(ggplot2)
+ggplot(iris, aes(Petal.Length, Petal.Width, color = Species)) + geom_point()
+set.seed(20)
+irisCluster <- kmeans(iris[, 3:4], 3, nstart = 20)
+irisCluster
+table(irisCluster$cluster, iris$Species)
+```
+
+
+better: 
+https://www.r-bloggers.com/k-means-clustering-in-r/
+
+```{r}
+library(datasets)
+head(iris)
+
+library(ggplot2)
+ggplot(iris, aes(Petal.Length, Petal.Width, color = Species)) + geom_point()
+
+
+```
+
+
+let us try to cluster it. Since the initial cluster assignments are random, let us set the seed to ensure reproducibility.
+
+```{r}
+
+set.seed(20)
+irisCluster <- kmeans(iris[, 3:4], 3, nstart = 20)
+irisCluster
+```
+
+
+Since we know that there are 3 species involved, we ask the algorithm to group the data into 3 clusters, and since the starting assignments are random, we specify nstart = 20. This means that R will try 20 different random starting assignments and then select the one with the lowest within cluster variation.
+We can see the cluster centroids, the clusters that each data point was assigned to, and the within cluster variation.
+
+Let us compare the clusters with the species.
+
+
+
+```{r}
+table(irisCluster$cluster, iris$Species)
+```
+
+As we can see, the data belonging to the setosa species got grouped into cluster 3, versicolor into cluster 2, and virginica into cluster 1. The algorithm wrongly classified two data points belonging to versicolor and six data points belonging to virginica.
+
+We can also plot the data to see the clusters:
+
+
+
+```{r}
+irisCluster$cluster <- as.factor(irisCluster$cluster)
+ggplot(iris, aes(Petal.Length, Petal.Width, color = iris$cluster)) + geom_point()
+```
+
+
+```{r}
+
+predspecies<-factor(irisCluster$cluster,labels = levels(iris$Species))
+
+library(caret)
+confusionMatrix(predspecies,iris$Species)
+```
+
+
+
+
+
+
+
+
+
+## Xray
+
+```{r}
+install.packages("devtools")
+devtools::install_github("sicarul/xray")  
+library(xray)
+library(gapminder)
+```
+
+
+```{r}
+xray::anomalies(gapminder)
+```
+
+
+
+
+## Gapminder
+```{r}
+#' gapminder data for Asia only
+gap <- gapminder %>%
+  filter(continent == "Asia") %>%
+  mutate(yr1952 = year - 1952)
+
+#+ alpha-order
+ggplot(gap, aes(x = lifeExp, y = country)) +
+  geom_point()
+
+#' Countries are in alphabetical order.
+#'
+#' Set factor levels with intent. Example: order based on life expectancy in
+#' 2007, the last year in this dataset. Imagine you want this to persist across
+#' an entire analysis.
+gap <- gap %>%
+  mutate(country = fct_reorder2(country, x = year, y = lifeExp))
+
+#+ principled-order
+ggplot(gap, aes(x = lifeExp, y = country)) +
+  geom_point()
+
+
+#' Much better!
+#'
+#' Now imagine we want to fit a model to each country and look at dot plots of
+#' slope and intercept.
+#'
+#' `dplyr::group_by()` + `tidyr::nest()` created a *nested data frame* and is an
+#' alternative to splitting into country-specific data frames. Those data frames
+#' end up, instead, in a list-column. The `country` variable remains as a normal
+#' factor.
+gap_nested <- gap %>%
+  group_by(country) %>%
+  nest()
+
+gap_nested
+gap_nested$data[[1]]
+
+gap_fitted <- gap_nested %>%
+  mutate(fit = map(data, ~ lm(lifeExp ~ yr1952, data = .x)))
+gap_fitted
+gap_fitted$fit[[1]]
+
+gap_fitted <- gap_fitted %>%
+  mutate(
+    intercept = map_dbl(fit, ~ coef(.x)[["(Intercept)"]]),
+    slope = map_dbl(fit, ~ coef(.x)[["yr1952"]])
+  )
+gap_fitted
+
+#+ principled-order-coef-ests
+ggplot(gap_fitted, aes(x = intercept, y = country)) +
+  geom_point()
+
+ggplot(gap_fitted, aes(x = slope, y = country)) +
+  geom_point()
+
+#' The `split()` + `lapply()` + `do.call(rbind, ...)` approach.
+#'
+#' Split gap into many data frames, one per country.
+gap_split <- split(gap, gap$country)
+
+#' Fit a model to each country.
+gap_split_fits <- lapply(
+  gap_split,
+  function(df) {
+    lm(lifeExp ~ yr1952, data = df)
+  }
+)
+#' Oops ... the unused levels of country are a problem (empty data frames in our
+#' list).
+#'
+#' Drop unused levels in country and split.
+gap_split <- split(droplevels(gap), droplevels(gap)$country)
+head(gap_split, 2)
+
+#' Fit model to each country and get `coefs()`.
+gap_split_coefs <- lapply(
+  gap_split,
+  function(df) {
+    coef(lm(lifeExp ~ yr1952, data = df))
+  }
+)
+head(gap_split_coefs, 2)
+
+#' Now we need to put everything back togethers. Row bind the list of coefs.
+#' Coerce from matrix back to data frame.
+gap_split_coefs <- as.data.frame(do.call(rbind, gap_split_coefs))
+
+#' Restore `country` variable from row names.
+gap_split_coefs$country <- rownames(gap_split_coefs)
+str(gap_split_coefs)
+
+#+ revert-to-alphabetical
+ggplot(gap_split_coefs, aes(x = `(Intercept)`, y = country)) +
+  geom_point()
+#' Uh-oh, we lost the order of the `country` factor, due to coercion from factor
+#' to character (list and then row names).
+#'
+#' The `nest()` approach allows you to keep data as data vs. in attributes, such
+#' as list or row names. Preserves factors and their levels or integer
+#' variables. Designs away various opportunities for different pieces of the
+#' dataset to get "out of sync" with each other, by leaving them in a data frame
+#' at all times.
+#'
+#' First in an interesting series of blog posts exploring these patterns and
+#' asking whether the tidyverse still needs a way to include the nesting
+#' variable in the nested data:
+#' <https://coolbutuseless.bitbucket.io/2018/03/03/split-apply-combine-my-search-for-a-replacement-for-group_by---do/>
+
+```
+
+
+
+
+### predictive modelling with cars
+
+
+
+```{r cars}
+
+data(cars)
+data(mtcars)
+plot(cars$speed,cars$dist)
+ggplot(cars, aes(speed,dist)) + geom_point()
+```
+
+```{r}
+fit<-lm(dist~speed,data=cars)
+summary(fit)
+
+
+plot(cars) +
+abline(lm(dist~speed,data=cars))
+
+# In RStudio, there's a setting in Preferences -> R Markdown to "Show output inline for all R Markdown documents". To get rid of the error, make sure this is unchecked.
+
+```
+
+
+```{r}
+data(mtcars)
+library(randomForest)
+# A data frame with 32 observations on 11 (numeric) variables.
+# 
+# [, 1]	mpg	Miles/(US) gallon
+# [, 2]	cyl	Number of cylinders
+# [, 3]	disp	Displacement (cu.in.)
+# [, 4]	hp	Gross horsepower
+# [, 5]	drat	Rear axle ratio
+# [, 6]	wt	Weight (1000 lbs)
+# [, 7]	qsec	1/4 mile time
+# [, 8]	vs	Engine (0 = V-shaped, 1 = straight)
+# [, 9]	am	Transmission (0 = automatic, 1 = manual)
+# [,10]	gear	Number of forward gears
+# [,11]	carb	Number of carburetors
+
+fit <- randomForest::randomForest(qsec~mpg+cyl+disp+hp+drat,data=mtcars)
+pred<-predict(fit,mtcars)
+
+plot(pred,mtcars$qsec)
+
+(rmse<-sqrt(mean((predict(fit,mtcars,type="response")-mtcars$qsec)^2)))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### DPLYR
+
+```{r}
+library(nycflights13)
+db_flights <- flights
+db_flights %>%
+  group_by(year) %>%
+  tally() 
+```
+
+Create summarizations
+```{r}
+db_flights %>% 
+  group_by(month) %>%
+  summarise(
+    no_flights = n(),
+    avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+    avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+  )
+```
+
+Join tables 
+```{r}
+data("airports")
+db_airports <- airports
+
+db_joined <- db_flights %>%
+  inner_join(db_airports, by = c("origin" = "faa")) 
+
+db_joined
+```
+
+Top 10 busiest airports.  Take advantage of `dplyr` lazy evaluation
+```{r}
+db_joined %>%
+  group_by(name) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  head(10)
+```
+
+## Visualization
+
+http://db.rstudio.com/best-practices/visualization/
+
+```{r}
+library(ggplot2) 
+
+t <- db_joined %>%
+  group_by(name) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  head(10) %>%
+  collect() 
+
+  ggplot(t) +
+  geom_col(aes(x = name, y = n)) +
+  coord_flip()
+  
+```
+
+```{r}
+db_joined  %>%
+  group_by(lon, lat) %>%
+  tally() %>%
+  select(n, lon, lat) %>%
+  collect() %>%
+  ggplot() +
+    geom_point(aes(x = lon, y = lat, size = n, color = n), alpha = 0.3)
+```
+
+
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

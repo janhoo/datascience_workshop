@@ -1,0 +1,62 @@
+---
+title: "Intro2R"
+author: "Jan Holstein"
+date: "18 April 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment
+
+The most straight forward way to store a list of numbers is through an assignment using the c command. (c stands for “combine.”) The idea is that a list of numbers is stored under a given name, and the name is used to refer to the data. A list is specified with the c command, and assignment is specified with the “<-” symbols. Another term used to describe the list of numbers is to call it a “vector.”
+
+The numbers within the c command are separated by commas. As an example, we can create a new variable, called “bubba” which will contain the numbers 3, 5, 7, and 9:
+
+When you enter this command you should not see any output except a new command line. The command creates a list of numbers called “bubba.” To see what numbers is included in bubba type “bubba” and press the enter key:
+
+```{r cars}
+foo <- c(3,5,7,9)
+foo
+```
+
+
+If you wish to work with one of the numbers you can get access to it using the variable and then square brackets indicating which number:
+
+```{r}
+foo[2]
+foo[1]
+foo[0]
+```
+
+Notice that the first entry is referred to as the number 1 entry, and the zero entry can be used to indicate how the computer will treat the data. You can store strings using both single and double quotes, and you can store real numbers.
+You now have a list of numbers and are ready to explore. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
