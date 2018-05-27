@@ -161,6 +161,10 @@ predict(model2,df)
 
 plot(model3)
 
+
+## Root mean squared error is a good measure for model 
+## quality. It has the same units as predictor and observables.
+
 predicted_dist <- predict(model3,newdata = cars)
 observed_dist <- cars$dist
 prediction_error <- observed_dist - predicted_dist
@@ -168,4 +172,53 @@ RootMeanSquaredError <- sqrt(mean(prediction_error^2))
 # or
 rmse <- sqrt(mean((cars$dist-predict(model3,newdata = cars))^2))
 
+## analysis of variance
+anova(model2,model3)
+## Multivariate models
+## ex 1: glm
+
+mtcars
+
+plot(mtcars)
+model4 <- glm(mpg~hp+drat,data=mtcars)
+
+# mpg = -0.051787 * hp + 4.698158 * drat + 10.789861
+# 
+# y = a1*x1 + a2*x2 + a3*x3 + .... + an*xn + C
+
+summary(model4)
+rmse <- sqrt(mean((mtcars$mpg-predict(model4,mtcars))^2))
+
+plot(mtcars$hp,mtcars$mpg)
+## for values of drat = 3.4,  4 , and 3
+abline(10.789861 + 4.698158 * 3.4 , -0.051 )
+abline(10.789861 + 4.698158 * 4   , -0.051 ,col="red")
+abline(10.789861 + 4.698158 * 3   , -0.051 ,col="green")
+
+# points(3.4,predict(model4,test),type="p",col="red")
+# # new data
+# test<-data.frame(hp=150,drat=3.4)
+# #
+# fake<-data.frame(hp=seq(50,350,length.out = 32),drat=3.4)
+# 
+# points(mtcars$hp,predict(model4,fake),type="p",col="red")
+# points(150,predict(model4,test),type="p",col="red")
+# nrow(mtcars)
+
+library(randomForest)
+model5 <- glm(mpg~cyl+disp+hp+drat+wt+qsec,data=mtcars)
+model6 <- randomForest(mpg~cyl+disp+hp+drat+wt+qsec,data=mtcars)
+summary(model6)
+model6$importance
+
+rf_prediction <- predict(model6,data.frame(hp=seq(50,300,length.out = nrow(mtcars)),
+                          cyl=mean(mtcars$cyl),
+                          disp=mean(mtcars$disp),
+                          drat=mean(mtcars$drat),
+                          wt=mean(mtcars$wt),
+                          qsec=mean(mtcars$qsec)))
+
+
+rmse <- sqrt(mean((mtcars$mpg-predict(model5,mtcars))^2))
+points(seq(50,300,length.out = nrow(mtcars)), rf_prediction , col="blue", pch='x')
 
