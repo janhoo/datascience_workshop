@@ -222,3 +222,45 @@ rf_prediction <- predict(model6,data.frame(hp=seq(50,300,length.out = nrow(mtcar
 rmse <- sqrt(mean((mtcars$mpg-predict(model5,mtcars))^2))
 points(seq(50,300,length.out = nrow(mtcars)), rf_prediction , col="blue", pch='x')
 
+
+
+
+
+## dplyr
+## pls check 
+## https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html
+library(dplyr)
+
+mtcars %>%
+  group_by(cyl,vs) %>%
+  summarize(av_disp=mean(disp))
+
+## ggplot
+library(ggplot2)
+ggplot(mtcars, aes(x=hp , y=mpg, color=drat)) + 
+  geom_point() + xlab("whateveryouwant") + 
+  geom_smooth()
+
+ggplot(mtcars, aes(x=factor(cyl) , y=mpg)) +
+geom_boxplot()
+  
+
+
+
+## Addendum
+## adding column 2 dataframe
+foo<-mtcars
+foo$prediction <- predict(model4,mtcars)
+foo$error<-foo$mpg-foo$prediction
+
+## factor
+foo
+summary(foo)
+foo$cyl <- factor(foo$cyl)
+as.numeric(foo$cyl)  # will give wrong answer
+as.numeric(as.character(foo$cyl)) # will work
+
+
+
+
+
